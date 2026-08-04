@@ -20,7 +20,8 @@
   }
   body { display: flex; flex-direction: column; min-height: 100vh; }
 
-  header { display: flex; align-items: center; gap: 12px; padding: 28px 32px 18px; }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 28px 32px 18px; }
+  .header-left { display: flex; align-items: center; gap: 12px; }
   .logo {
     width: 34px; height: 34px; background: var(--mint);
     clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
@@ -33,6 +34,14 @@
   }
   .brand-name { font-weight: 700; font-size: 15px; letter-spacing: 0.5px; }
   .tagline { font-size: 11px; color: var(--mint); letter-spacing: 1.2px; text-transform: uppercase; }
+
+  #speaker-btn {
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px; width: 38px; height: 38px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; color: var(--mint);
+    font-size: 16px; flex-shrink: 0;
+  }
+  #speaker-btn.muted { color: #6b8079; }
 
   main {
     flex: 1; display: flex; flex-direction: column; align-items: center;
@@ -104,11 +113,14 @@
 <body>
 
 <header>
-  <div class="logo"></div>
-  <div>
-    <div class="brand-name">SOLUTRA</div>
-    <div class="tagline">Faster Intelligence · Real-Time Results</div>
+  <div class="header-left">
+    <div class="logo"></div>
+    <div>
+      <div class="brand-name">SOLUTRA</div>
+      <div class="tagline">Faster Intelligence · Real-Time Results</div>
+    </div>
   </div>
+  <button id="speaker-btn" title="Toggle voice replies">🔊</button>
 </header>
 
 <main id="main">
@@ -142,8 +154,30 @@
   let loading = false;
   let started = false;
   let listening = false;
+  let voiceEnabled = true;
   let idleTimer = null;
   let recognition = null;
+  const synth = window.speechSynthesis;
+
+  const speakerBtn = document.getElementById('speaker-btn');
+
+  function speak(text) {
+    if (!voiceEnabled || !synth) return;
+    synth.cancel(); // stop anything currently talking
+    // Strip markdown-ish symbols so they aren't read aloud
+    const clean = text.replace(/[*_#`]/g, '');
+    const utterance = new SpeechSynthesisUtterance(clean);
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+    synth.speak(utterance);
+  }
+
+  speakerBtn.addEventListener('click', () => {
+    voiceEnabled = !voiceEnabled;
+    speakerBtn.textContent = voiceEnabled ? '🔊' : '🔇';
+    speakerBtn.classList.toggle('muted', !voiceEnabled);
+    if (!voiceEnabled && synth) synth.cancel();
+  });
 
   const mainEl = document.getElementById('main');
   const heroEl = document.getElementById('hero');
@@ -154,6 +188,7 @@
   const micBtn = document.getElementById('mic-btn');
 
   function resetKiosk() {
+    if (synth) synth.cancel();
     messages = [];
     loading = false;
     started = false;
@@ -216,6 +251,7 @@
       const data = await response.json();
       const replyText = data && data.text ? data.text : "Let's talk — ask me anything about how Success Leaps can help.";
       messages.push({ role: 'assistant', content: replyText });
+      speak(replyText);
     } catch (e) {
       messages.push({ role: 'assistant', content: 'Connection hiccup — try that again in a moment.' });
     } finally {
@@ -265,6 +301,7 @@
       listening = false;
       micBtn.classList.remove('listening');
     } else {
+      if (synth) synth.cancel();
       inputEl.value = '';
       recognition.start();
       listening = true;
@@ -275,3 +312,5 @@
 
 </body>
 </html>
+
+ 
