@@ -1,316 +1,62 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Solutra — Success Leaps</title>
-<style>
-  :root {
-    --navy: #03070a;
-    --mint: #2FE0AD;
-    --mint-dim: #1a8c6c;
-  }
-  * { box-sizing: border-box; }
-  html, body {
-    margin: 0;
-    height: 100%;
-    background: radial-gradient(circle at 50% 0%, #0a1512 0%, var(--navy) 55%);
-    font-family: 'Inter', system-ui, sans-serif;
-    color: #eaf6f1;
-  }
-  body { display: flex; flex-direction: column; min-height: 100vh; }
+// File location in your Vercel project: /api/ask.js
+// This is your "middleman." The browser never sees your API key —
+// only this server-side function does, via the ANTHROPIC_API_KEY
+// environment variable you set in Vercel's dashboard.
 
-  header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 28px 32px 18px; }
-  .header-left { display: flex; align-items: center; gap: 12px; }
-  .logo {
-    width: 34px; height: 34px; background: var(--mint);
-    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-    display: flex; align-items: center; justify-content: center;
-  }
-  .logo::after {
-    content: ""; width: 0; height: 0;
-    border-left: 6px solid transparent; border-right: 6px solid transparent;
-    border-bottom: 12px solid var(--navy); transform: rotate(20deg);
-  }
-  .brand-name { font-weight: 700; font-size: 15px; letter-spacing: 0.5px; }
-  .tagline { font-size: 11px; color: var(--mint); letter-spacing: 1.2px; text-transform: uppercase; }
+const SYSTEM_PROMPT = `You are Solutra, the AI guide for Success Leaps Consulting, a strategic implementation and training firm led by Florence Gaspard. Your voice is assertive, approachable, and authoritative — you speak with the confidence of someone who has solved these exact problems before, you don't hedge or over-qualify, and you get straight to the point without being cold. You help visitors at a live event understand how Success Leaps can support their business, government agency, or nonprofit.
 
-  #speaker-btn {
-    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 10px; width: 38px; height: 38px; cursor: pointer;
-    display: flex; align-items: center; justify-content: center; color: var(--mint);
-    font-size: 16px; flex-shrink: 0;
-  }
-  #speaker-btn.muted { color: #6b8079; }
+Core services you can speak to:
+- Strategic implementation & training for schools, nonprofits, for-profit, and medical institutions
+- Government contracting support (Success Leaps is WOSB, MBE, SDB certified and SAM-registered)
+- The Unpack → Shift → Thrive methodology (emotional regulation → mindset/confidence → leadership performance)
+- The Human Upgrade movement
+- AI-powered marketing and brand messaging (Signal, part of the Business Axis growth tier) — practical, non-hypey AI use for content, positioning, and customer communication
 
-  main {
-    flex: 1; display: flex; flex-direction: column; align-items: center;
-    justify-content: center; padding: 0 24px;
-  }
-  main.started { justify-content: flex-start; }
+Keep answers to 2-4 sentences, conversational, booth-appropriate. Lead with the answer, not a caveat. Never mention Claude, Anthropic, or that you are an AI model — you are Solutra. If asked something totally outside scope, redirect warmly toward what Success Leaps does.`;
 
-  #hero { text-align: center; max-width: 520px; margin-bottom: 40px; }
-  #hero .eyebrow { font-size: 13px; color: var(--mint); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 14px; }
-  #hero h1 { font-size: 34px; font-weight: 700; line-height: 1.15; margin: 0; }
-  #hero p { color: #9db8ae; font-size: 15px; margin-top: 14px; }
-
-  #chat {
-    display: none; width: 100%; max-width: 560px; flex: 1;
-    overflow-y: auto; padding: 20px 4px 12px;
-  }
-  .msg-row { display: flex; margin-bottom: 14px; }
-  .msg-row.user { justify-content: flex-end; }
-  .msg-row.assistant { justify-content: flex-start; }
-  .bubble {
-    max-width: 80%; padding: 12px 16px; border-radius: 14px;
-    font-size: 14.5px; line-height: 1.5;
-  }
-  .bubble.user { background: var(--mint); color: var(--navy); }
-  .bubble.assistant { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); }
-
-  #dots { display: none; gap: 5px; padding: 6px 4px; }
-  #dots span {
-    width: 6px; height: 6px; border-radius: 6px; background: var(--mint-dim);
-    animation: pulse 1s infinite ease-in-out;
-  }
-  #dots span:nth-child(2) { animation-delay: 0.15s; }
-  #dots span:nth-child(3) { animation-delay: 0.3s; }
-  @keyframes pulse { 0%,100%{opacity:.3; transform:translateY(0)} 50%{opacity:1; transform:translateY(-3px)} }
-
-  #suggestions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-bottom: 32px; max-width: 560px; }
-  #suggestions button {
-    background: rgba(47,224,173,0.08); border: 1px solid var(--mint-dim); color: var(--mint);
-    border-radius: 20px; padding: 9px 16px; font-size: 13px; cursor: pointer; font-family: inherit;
+export default async function handler(req, res) {
+  // Only allow POST requests
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
-  #input-bar-wrap { padding: 18px 24px 32px; display: flex; justify-content: center; }
-  #input-bar {
-    width: 100%; max-width: 560px; display: flex; gap: 10px;
-    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 16px; padding: 8px;
+  // Basic safety: cap how much conversation history gets sent
+  const { messages } = req.body;
+  if (!Array.isArray(messages) || messages.length === 0) {
+    return res.status(400).json({ error: "Missing messages" });
   }
-  #mic-btn {
-    background: rgba(255,255,255,0.08); border: none; border-radius: 10px;
-    width: 42px; height: 42px; cursor: pointer; display: flex;
-    align-items: center; justify-content: center; flex-shrink: 0;
-  }
-  #mic-btn.listening { background: var(--mint); animation: micpulse 1.1s infinite; }
-  @keyframes micpulse { 0%,100%{box-shadow:0 0 0 0 rgba(47,224,173,0.5)} 50%{box-shadow:0 0 0 8px rgba(47,224,173,0)} }
-  #mic-btn .dot { width: 12px; height: 18px; border-radius: 6px; background: var(--mint); }
-  #mic-btn.listening .dot { background: var(--navy); }
+  const trimmedMessages = messages.slice(-12); // last 12 turns max
 
-  #text-input {
-    flex: 1; background: transparent; border: none; outline: none;
-    color: #eaf6f1; font-size: 15px; padding: 10px 12px; font-family: inherit;
-  }
-  #ask-btn {
-    background: var(--mint); color: var(--navy); border: none; border-radius: 10px;
-    padding: 0 20px; font-weight: 700; font-size: 14px; cursor: pointer; font-family: inherit;
-  }
-  #ask-btn:disabled { opacity: 0.6; cursor: default; }
-</style>
-</head>
-<body>
-
-<header>
-  <div class="header-left">
-    <div class="logo"></div>
-    <div>
-      <div class="brand-name">SOLUTRA</div>
-      <div class="tagline">Faster Intelligence · Real-Time Results</div>
-    </div>
-  </div>
-  <button id="speaker-btn" title="Toggle voice replies">🔊</button>
-</header>
-
-<main id="main">
-  <div id="hero">
-    <div class="eyebrow">Step up. Ask anything.</div>
-    <h1>What's the one thing<br />slowing your business down?</h1>
-    <p>Ask Solutra about Success Leaps — strategy, training, or government contracting.</p>
-  </div>
-
-  <div id="chat"></div>
-
-  <div id="suggestions">
-    <button data-q="How do I stop losing time to the same operational bottlenecks?">How do I stop losing time to the same operational bottlenecks?</button>
-    <button data-q="Can AI actually help with my marketing, or is it hype?">Can AI actually help with my marketing, or is it hype?</button>
-    <button data-q="My team is burned out — where do we even start?">My team is burned out — where do we even start?</button>
-    <button data-q="How do we win more government contracts?">How do we win more government contracts?</button>
-  </div>
-</main>
-
-<div id="input-bar-wrap">
-  <div id="input-bar">
-    <button id="mic-btn" title="Speak your question"><div class="dot"></div></button>
-    <input id="text-input" type="text" placeholder="Ask a business question, or tap the mic" />
-    <button id="ask-btn">Ask</button>
-  </div>
-</div>
-
-<script>
-  const IDLE_RESET_MS = 60000;
-  let messages = [];
-  let loading = false;
-  let started = false;
-  let listening = false;
-  let voiceEnabled = true;
-  let idleTimer = null;
-  let recognition = null;
-  const synth = window.speechSynthesis;
-
-  const speakerBtn = document.getElementById('speaker-btn');
-
-  function speak(text) {
-    if (!voiceEnabled || !synth) return;
-    synth.cancel(); // stop anything currently talking
-    // Strip markdown-ish symbols so they aren't read aloud
-    const clean = text.replace(/[*_#`]/g, '');
-    const utterance = new SpeechSynthesisUtterance(clean);
-    utterance.rate = 1.0;
-    utterance.pitch = 1.0;
-    synth.speak(utterance);
-  }
-
-  speakerBtn.addEventListener('click', () => {
-    voiceEnabled = !voiceEnabled;
-    speakerBtn.textContent = voiceEnabled ? '🔊' : '🔇';
-    speakerBtn.classList.toggle('muted', !voiceEnabled);
-    if (!voiceEnabled && synth) synth.cancel();
-  });
-
-  const mainEl = document.getElementById('main');
-  const heroEl = document.getElementById('hero');
-  const chatEl = document.getElementById('chat');
-  const suggestionsEl = document.getElementById('suggestions');
-  const inputEl = document.getElementById('text-input');
-  const askBtn = document.getElementById('ask-btn');
-  const micBtn = document.getElementById('mic-btn');
-
-  function resetKiosk() {
-    if (synth) synth.cancel();
-    messages = [];
-    loading = false;
-    started = false;
-    inputEl.value = '';
-    chatEl.innerHTML = '';
-    chatEl.style.display = 'none';
-    heroEl.style.display = 'block';
-    suggestionsEl.style.display = 'flex';
-    mainEl.classList.remove('started');
-  }
-
-  function bumpIdleTimer() {
-    clearTimeout(idleTimer);
-    idleTimer = setTimeout(resetKiosk, IDLE_RESET_MS);
-  }
-
-  function renderMessages() {
-    chatEl.innerHTML = '';
-    messages.forEach(m => {
-      const row = document.createElement('div');
-      row.className = 'msg-row ' + m.role;
-      const bubble = document.createElement('div');
-      bubble.className = 'bubble ' + m.role;
-      bubble.textContent = m.content;
-      row.appendChild(bubble);
-      chatEl.appendChild(row);
+  try {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": process.env.ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 500,
+        system: SYSTEM_PROMPT,
+        messages: trimmedMessages,
+      }),
     });
-    if (loading) {
-      const dots = document.createElement('div');
-      dots.id = 'dots';
-      dots.style.display = 'flex';
-      dots.innerHTML = '<span></span><span></span><span></span>';
-      chatEl.appendChild(dots);
+
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error("Claude API error:", errText);
+      return res.status(502).json({ error: "Upstream error" });
     }
-    chatEl.scrollTop = chatEl.scrollHeight;
+
+    const data = await response.json();
+    const text =
+      data?.content?.find((b) => b.type === "text")?.text ||
+      "Let's talk — ask me anything about how Success Leaps can help.";
+
+    return res.status(200).json({ text });
+  } catch (err) {
+    console.error("Relay error:", err);
+    return res.status(500).json({ error: "Something went wrong" });
   }
-
-  async function send(text) {
-    if (!text || !text.trim() || loading) return;
-    if (!started) {
-      started = true;
-      heroEl.style.display = 'none';
-      suggestionsEl.style.display = 'none';
-      chatEl.style.display = 'block';
-      mainEl.classList.add('started');
-    }
-    messages.push({ role: 'user', content: text });
-    inputEl.value = '';
-    loading = true;
-    askBtn.disabled = true;
-    renderMessages();
-    bumpIdleTimer();
-
-    try {
-      const response = await fetch('/api/ask', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages })
-      });
-      const data = await response.json();
-      const replyText = data && data.text ? data.text : "Let's talk — ask me anything about how Success Leaps can help.";
-      messages.push({ role: 'assistant', content: replyText });
-      speak(replyText);
-    } catch (e) {
-      messages.push({ role: 'assistant', content: 'Connection hiccup — try that again in a moment.' });
-    } finally {
-      loading = false;
-      askBtn.disabled = false;
-      renderMessages();
-      bumpIdleTimer();
-    }
-  }
-
-  askBtn.addEventListener('click', () => send(inputEl.value));
-  inputEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') send(inputEl.value); });
-  suggestionsEl.addEventListener('click', (e) => {
-    if (e.target.tagName === 'BUTTON') send(e.target.dataset.q);
-  });
-
-  // Voice input
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (SpeechRecognition) {
-    recognition = new SpeechRecognition();
-    recognition.continuous = false;
-    recognition.interimResults = true;
-    recognition.lang = 'en-US';
-    recognition.onresult = (e) => {
-      let transcript = '';
-      for (let i = 0; i < e.results.length; i++) transcript += e.results[i][0].transcript;
-      inputEl.value = transcript;
-    };
-    recognition.onend = () => {
-      listening = false;
-      micBtn.classList.remove('listening');
-      if (inputEl.value.trim()) send(inputEl.value);
-    };
-    recognition.onerror = () => {
-      listening = false;
-      micBtn.classList.remove('listening');
-    };
-  }
-
-  micBtn.addEventListener('click', () => {
-    if (!recognition) {
-      alert("Voice input isn't supported in this browser — try Chrome.");
-      return;
-    }
-    if (listening) {
-      recognition.stop();
-      listening = false;
-      micBtn.classList.remove('listening');
-    } else {
-      if (synth) synth.cancel();
-      inputEl.value = '';
-      recognition.start();
-      listening = true;
-      micBtn.classList.add('listening');
-    }
-  });
-</script>
-
-</body>
-</html>
-
- 
+}
