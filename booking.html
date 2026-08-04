@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Book with Solutra — Success Leaps</title>
+<style>
+  :root {
+    --navy: #03070a;
+    --mint: #2FE0AD;
+    --mint-dim: #1a8c6c;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    height: 100%;
+    background: radial-gradient(circle at 50% 0%, #0a1512 0%, var(--navy) 55%);
+    font-family: 'Inter', system-ui, sans-serif;
+    color: #eaf6f1;
+  }
+  body { display: flex; flex-direction: column; min-height: 100vh; }
+
+  header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 28px 32px 18px; }
+  .header-left { display: flex; align-items: center; gap: 12px; }
+  .logo {
+    width: 34px; height: 34px; background: var(--mint);
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .logo::after {
+    content: ""; width: 0; height: 0;
+    border-left: 6px solid transparent; border-right: 6px solid transparent;
+    border-bottom: 12px solid var(--navy); transform: rotate(20deg);
+  }
+  .brand-name { font-weight: 700; font-size: 15px; letter-spacing: 0.5px; }
+  .tagline { font-size: 11px; color: var(--mint); letter-spacing: 1.2px; text-transform: uppercase; }
+
+  main {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; padding: 0 24px;
+  }
+
+  #hero { text-align: center; max-width: 480px; margin-bottom: 24px; }
+  #hero .eyebrow { font-size: 13px; color: var(--mint); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 14px; }
+  #hero h1 { font-size: 28px; font-weight: 700; line-height: 1.2; margin: 0; }
+  #hero p { color: #9db8ae; font-size: 15px; margin-top: 12px; }
+
+  #avatar-wrap {
+    width: 100%; max-width: 380px; margin: 0 auto 20px;
+    border-radius: 18px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.03); aspect-ratio: 3 / 4; position: relative;
+  }
+  #avatar-video { width: 100%; height: 100%; object-fit: cover; display: block; }
+  #avatar-status {
+    position: absolute; bottom: 10px; left: 12px; font-size: 11px; color: var(--mint);
+    background: rgba(3,7,10,0.7); padding: 4px 10px; border-radius: 20px; letter-spacing: 0.5px;
+  }
+
+  #reply-bubble {
+    display: none; max-width: 480px; width: 100%; background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 14px 18px;
+    font-size: 15px; line-height: 1.5; margin-bottom: 20px; text-align: center;
+  }
+
+  #book-btn {
+    display: none; background: var(--mint); color: var(--navy); border: none;
+    border-radius: 14px; padding: 16px 32px; font-weight: 700; font-size: 16px;
+    cursor: pointer; font-family: inherit; margin-bottom: 24px;
+    box-shadow: 0 0 0 0 rgba(47,224,173,0.5); animation: bookpulse 1.6s infinite;
+  }
+  @keyframes bookpulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(47,224,173,0.4); }
+    50% { box-shadow: 0 0 0 10px rgba(47,224,173,0); }
+  }
+
+  #input-bar-wrap { padding: 18px 24px 32px; display: flex; justify-content: center; width: 100%; }
+  #input-bar {
+    width: 100%; max-width: 480px; display: flex; gap: 10px;
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px; padding: 8px;
+  }
+  #mic-btn {
+    background: rgba(255,255,255,0.08); border: none; border-radius: 10px;
+    width: 42px; height: 42px; cursor: pointer; display: flex;
+    align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  #mic-btn.listening { background: var(--mint); animation: micpulse 1.1s infinite; }
+  @keyframes micpulse { 0%,100%{box-shadow:0 0 0 0 rgba(47,224,173,0.5)} 50%{box-shadow:0 0 0 8px rgba(47,224,173,0)} }
+  #mic-btn .dot { width: 12px; height: 18px; border-radius: 6px; background: var(--mint); }
+  #mic-btn.listening .dot { background: var(--navy); }
+
+  #text-input {
+    flex: 1; background: transparent; border: none; outline: none;
+    color: #eaf6f1; font-size: 15px; padding: 10px 12px; font-family: inherit;
+  }
+  #ask-btn {
+    background: var(--mint); color: var(--navy); border: none; border-radius: 10px;
+    padding: 0 20px; font-weight: 700; font-size: 14px; cursor: pointer; font-family: inherit;
+  }
+  #ask-btn:disabled { opacity: 0.6; cursor: default; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <div class="logo"></div>
+    <div>
+      <div class="brand-name">SOLUTRA</div>
+      <div class="tagline">Book Your Consultation</div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div id="hero">
+    <div class="eyebrow">Ready to take the next step?</div>
+    <h1>Tell Solutra what you're looking for</h1>
+    <p>She'll point you to the right consultation and get you booked.</p>
+  </div>
+
+  <div id="avatar-wrap">
+    <video id="avatar-video" autoplay playsinline></video>
+    <div id="avatar-status">Connecting Solutra…</div>
+  </div>
+
+  <div id="reply-bubble"></div>
+
+  <button id="book-btn">Book Your Consultation →</button>
+</main>
+
+<div id="input-bar-wrap">
+  <div id="input-bar">
+    <button id="mic-btn" title="Speak to Solutra"><div class="dot"></div></button>
+    <input id="text-input" type="text" placeholder="Tell Solutra what you need, or tap the mic" />
+    <button id="ask-btn">Send</button>
+  </div>
+</div>
+
+<script type="module">
+  // ===== Fill these in before going live =====
+  const HEYGEN_AVATAR_ID = "a2989814c0fe4258a010fab2cf87221f";
+  const GOOGLE_CALENDAR_URL = "https://calendar.app.google/qBeiPQywCW7ho3WK7";
+  // =============================================
+
+  const HEYGEN_VOICE_ID = "sPlgZ2FXwEFmsryyUBjp";
+  const HEYGEN_ENABLED = HEYGEN_AVATAR_ID !== "PASTE_YOUR_AVATAR_ID_HERE";
+  const IDLE_RESET_MS = 60000;
+
+  let messages = [];
+  let loading = false;
+  let listening = false;
+  let idleTimer = null;
+  let recognition = null;
+
+  const avatarWrapEl = document.getElementById('avatar-wrap');
+  const avatarVideoEl = document.getElementById('avatar-video');
+  const avatarStatusEl = document.getElementById('avatar-status');
+  const replyBubbleEl = document.getElementById('reply-bubble');
+  const bookBtnEl = document.getElementById('book-btn');
+  const inputEl = document.getElementById('text-input');
+  const askBtn = document.getElementById('ask-btn');
+  const micBtn = document.getElementById('mic-btn');
+
+  bookBtnEl.addEventListener('click', () => {
+    window.open(GOOGLE_CALENDAR_URL, '_blank');
+  });
+
+  // ===== HeyGen streaming avatar =====
+  let StreamingAvatar, AvatarQuality, StreamingEvents, TaskType;
+  let avatarClient = null;
+  let avatarReady = false;
+  let avatarStarting = false;
+
+  if (HEYGEN_ENABLED) {
+    try {
+      const mod = await import("https://esm.sh/@heygen/streaming-avatar");
+      StreamingAvatar = mod.default;
+      AvatarQuality = mod.AvatarQuality;
+      StreamingEvents = mod.StreamingEvents;
+      TaskType = mod.TaskType;
+    } catch (e) {
+      console.error("Could not load HeyGen SDK:", e);
+    }
+  } else {
+    avatarStatusEl.textContent = 'Avatar not configured yet';
+  }
+
+  async function fetchHeyGenToken() {
+    const res = await fetch('/api/heygen-token', { method: 'POST' });
+    const data = await res.json();
+    if (!data.token) throw new Error('No HeyGen token returned');
+    return data.token;
+  }
+
+  async function startAvatarSession() {
+    if (!HEYGEN_ENABLED || !StreamingAvatar || avatarStarting || avatarReady) return;
+    avatarStarting = true;
+    avatarStatusEl.textContent = 'Connecting Solutra…';
+    try {
+      const token = await fetchHeyGenToken();
+      avatarClient = new StreamingAvatar({ token });
+
+      avatarClient.on(StreamingEvents.STREAM_READY, (event) => {
+        avatarVideoEl.srcObject = event.detail;
+        avatarStatusEl.textContent = '';
+        avatarReady = true;
+        avatarStarting = false;
+      });
+
+      avatarClient.on(StreamingEvents.STREAM_DISCONNECTED, () => {
+        avatarReady = false;
+        avatarStatusEl.textContent = 'Reconnecting…';
+      });
+
+      await avatarClient.createStartAvatar({
+        avatarName: HEYGEN_AVATAR_ID,
+        quality: AvatarQuality.Low,
+        voice: { voiceId: HEYGEN_VOICE_ID },
+      });
+    } catch (e) {
+      console.error('HeyGen avatar failed to start:', e);
+      avatarStatusEl.textContent = 'Avatar unavailable — text only';
+      avatarStarting = false;
+    }
+  }
+
+  async function avatarSpeak(text) {
+    if (!HEYGEN_ENABLED || !avatarReady || !avatarClient) return false;
+    try {
+      await avatarClient.speak({ text, taskType: TaskType.REPEAT });
+      return true;
+    } catch (e) {
+      console.error('HeyGen speak failed:', e);
+      return false;
+    }
+  }
+
+  async function stopAvatarSession() {
+    if (avatarClient) {
+      try { await avatarClient.stopAvatar(); } catch (e) { /* ignore */ }
+    }
+    avatarClient = null;
+    avatarReady = false;
+    avatarStarting = false;
+  }
+  // ===== end HeyGen setup =====
+
+  function resetBookingScreen() {
+    stopAvatarSession();
+    messages = [];
+    loading = false;
+    inputEl.value = '';
+    replyBubbleEl.style.display = 'none';
+    replyBubbleEl.textContent = '';
+    bookBtnEl.style.display = 'none';
+    startAvatarSession();
+  }
+
+  function bumpIdleTimer() {
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(resetBookingScreen, IDLE_RESET_MS);
+  }
+
+  async function send(text) {
+    if (!text || !text.trim() || loading) return;
+    messages.push({ role: 'user', content: text });
+    inputEl.value = '';
+    loading = true;
+    askBtn.disabled = true;
+    bumpIdleTimer();
+
+    try {
+      const response = await fetch('/api/book', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages })
+      });
+      const data = await response.json();
+      const replyText = data && data.text ? data.text : "Tell me a bit more about what you're looking for.";
+      messages.push({ role: 'assistant', content: replyText });
+
+      replyBubbleEl.textContent = replyText;
+      replyBubbleEl.style.display = 'block';
+
+      const avatarHandledIt = await avatarSpeak(replyText);
+      if (!avatarHandledIt) {
+        const synth = window.speechSynthesis;
+        if (synth) {
+          const u = new SpeechSynthesisUtterance(replyText.replace(/[*_#`]/g, ''));
+          u.rate = 0.98; u.pitch = 0.92;
+          synth.speak(u);
+        }
+      }
+
+      if (data && data.readyToBook) {
+        bookBtnEl.style.display = 'inline-block';
+      }
+    } catch (e) {
+      replyBubbleEl.textContent = 'Connection hiccup — try that again in a moment.';
+      replyBubbleEl.style.display = 'block';
+    } finally {
+      loading = false;
+      askBtn.disabled = false;
+      bumpIdleTimer();
+    }
+  }
+
+  askBtn.addEventListener('click', () => send(inputEl.value));
+  inputEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') send(inputEl.value); });
+
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (SpeechRecognition) {
+    recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+    recognition.onresult = (e) => {
+      let transcript = '';
+      for (let i = 0; i < e.results.length; i++) transcript += e.results[i][0].transcript;
+      inputEl.value = transcript;
+    };
+    recognition.onend = () => {
+      listening = false;
+      micBtn.classList.remove('listening');
+      if (inputEl.value.trim()) send(inputEl.value);
+    };
+    recognition.onerror = () => {
+      listening = false;
+      micBtn.classList.remove('listening');
+    };
+  }
+
+  micBtn.addEventListener('click', () => {
+    if (!recognition) {
+      alert("Voice input isn't supported in this browser — try Chrome.");
+      return;
+    }
+    if (listening) {
+      recognition.stop();
+      listening = false;
+      micBtn.classList.remove('listening');
+    } else {
+      if (avatarClient && avatarClient.interrupt) {
+        try { avatarClient.interrupt(); } catch (e) { /* ignore */ }
+      }
+      inputEl.value = '';
+      recognition.start();
+      listening = true;
+      micBtn.classList.add('listening');
+    }
+  });
+
+  // This screen is booking-only, so connect the avatar right away
+  startAvatarSession();
+  bumpIdleTimer();
+</script>
+
+</body>
+</html>
