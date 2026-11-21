@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Book with Solutra — Success Leaps</title>
+<title>Book with Entuva — Success Leaps</title>
 <style>
   :root {
     --navy: #03070a;
@@ -106,7 +106,7 @@
   <div class="header-left">
     <div class="logo"></div>
     <div>
-      <div class="brand-name">SOLUTRA</div>
+      <div class="brand-name">ENTUVA</div>
       <div class="tagline">Book Your Consultation</div>
     </div>
   </div>
@@ -115,13 +115,13 @@
 <main>
   <div id="hero">
     <div class="eyebrow">Ready to take the next step?</div>
-    <h1>Tell Solutra what you're looking for</h1>
+    <h1>Tell Entuva what you're looking for</h1>
     <p>She'll point you to the right consultation and get you booked.</p>
   </div>
 
   <div id="avatar-wrap">
     <video id="avatar-video" autoplay playsinline></video>
-    <div id="avatar-status">Connecting Solutra…</div>
+    <div id="avatar-status">Connecting Entuva…</div>
   </div>
 
   <div id="reply-bubble"></div>
@@ -131,8 +131,8 @@
 
 <div id="input-bar-wrap">
   <div id="input-bar">
-    <button id="mic-btn" title="Speak to Solutra"><div class="dot"></div></button>
-    <input id="text-input" type="text" placeholder="Tell Solutra what you need, or tap the mic" />
+    <button id="mic-btn" title="Speak to Entuva"><div class="dot"></div></button>
+    <input id="text-input" type="text" placeholder="Tell Entuva what you need, or tap the mic" />
     <button id="ask-btn">Send</button>
   </div>
 </div>
@@ -196,7 +196,7 @@
   async function startAvatarSession() {
     if (!HEYGEN_ENABLED || !StreamingAvatar || avatarStarting || avatarReady) return;
     avatarStarting = true;
-    avatarStatusEl.textContent = 'Connecting Solutra…';
+    avatarStatusEl.textContent = 'Connecting Entuva…';
     try {
       const token = await fetchHeyGenToken();
       avatarClient = new StreamingAvatar({ token });
